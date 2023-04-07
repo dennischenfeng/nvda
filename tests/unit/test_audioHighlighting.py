@@ -3,6 +3,21 @@
 from speech.audioHighlighting import splitOffSpecialCharacters, changePitchOnSpecialCharacters, changePitchOnSpecialCharactersOfString, SYMBOLS
 from speech.commands import PitchCommand, EndUtteranceCommand
 
+def test_changePitchOnSpecialCharacters():
+    """Test changePitchOnSpecialCharacters"""
+    specials = SYMBOLS
+    seq = [PitchCommand(offset=20), "hello()"]
+    result = changePitchOnSpecialCharacters(seq, specials, pitchOffset=100, pauses=False)
+
+    assertPitchCommand(result[0], 20)
+    assertPitchCommand(result[1], 0)
+    assert result[2] == "hello"
+    assertPitchCommand(result[3], 100)
+    assert result[4] == "("
+    assertPitchCommand(result[5], 100)
+    assert result[6] == ")"
+    
+
 def test_changePitchOnSpecialCharactersOfString():
     """Test changePitchOnSpecialCharactersOfString"""
     specials = SYMBOLS
@@ -11,10 +26,6 @@ def test_changePitchOnSpecialCharactersOfString():
     string1 = "hello()"
     seq = changePitchOnSpecialCharactersOfString(string1, specials, pitchOffset=pitchOffset, pauses=False)
     
-    def assertPitchCommand(obj, offset):
-        assert isinstance(obj, PitchCommand)
-        assert obj.offset == offset
-
     assertPitchCommand(seq[0], 0)
     assert seq[1] == "hello"
     assertPitchCommand(seq[2], pitchOffset)
@@ -58,3 +69,8 @@ def test_splitOffSpecialCharacters():
     assert actualResult2["substrings"] == expectedSubstrings2
     assert actualResult2["specialsMask"] == expectedSpecialsMask2
 
+def assertPitchCommand(obj, offset):
+        assert isinstance(obj, PitchCommand)
+        assert obj.offset == offset
+
+    
