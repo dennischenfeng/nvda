@@ -7,6 +7,8 @@
 """High-level functions to speak information.
 """ 
 
+from characterProcessing import SymbolLevel
+from speech.audioHighlighting import changePitchOnSpecialCharacters, SYMBOLS
 import itertools
 import typing
 import weakref
@@ -884,6 +886,12 @@ def speak(  # noqa: C901
 	@param symbolLevel: The symbol verbosity level; C{None} (default) to use the user's configuration.
 	@param priority: The speech priority.
 	"""
+	# added audio highlighting
+	if symbolLevel is None:
+		symbolLevel=config.conf["speech"]["symbolLevel"]
+	if symbolLevel == SymbolLevel.ALL:
+		speechSequence = changePitchOnSpecialCharacters(speechSequence, SYMBOLS, pitchOffset=100, pauses=True)
+
 	logBadSequenceTypes(speechSequence)
 	# in case priority was explicitly passed in as None, set to default.
 	priority: Spri = Spri.NORMAL if priority is None else priority
