@@ -888,8 +888,9 @@ def speak(  # noqa: C901
 	"""
 	# added audio highlighting
 	if symbolLevel is None:
-		symbolLevel=config.conf["speech"]["symbolLevel"]
-	if symbolLevel == SymbolLevel.ALL:
+		symbolLevel = config.conf["speech"]["symbolLevel"]
+	noPitchCommand = not any(isinstance(x, PitchCommand) for x in speechSequence)
+	if symbolLevel == SymbolLevel.ALL and noPitchCommand:
 		speechSequence = changePitchOnSpecialCharacters(speechSequence, SYMBOLS, pitchOffset=100, pauses=True)
 
 	logBadSequenceTypes(speechSequence)
