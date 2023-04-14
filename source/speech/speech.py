@@ -9,6 +9,7 @@
 
 from characterProcessing import SymbolLevel
 from speech.audioHighlighting import changePitchOnSpecialCharacters, SYMBOLS
+import controlTypes
 import itertools
 import typing
 import weakref
@@ -890,7 +891,19 @@ def speak(  # noqa: C901
 	if symbolLevel is None:
 		symbolLevel = config.conf["speech"]["symbolLevel"]
 	noPitchCommand = not any(isinstance(x, PitchCommand) for x in speechSequence)
-	if symbolLevel == SymbolLevel.ALL and noPitchCommand:
+
+	focus = api.getFocusObject()
+	usingVSCode = focus.appModule.appName == "code"
+	isEditable = focus.role == controlTypes.Role.EDITABLETEXT
+	isPythonFile = ".py" in focus.name
+
+	if (
+		symbolLevel == SymbolLevel.ALL 
+		and noPitchCommand
+		and usingVSCode
+		and isEditable
+		and isPythonFile
+	):
 		speechSequence = changePitchOnSpecialCharacters(speechSequence, SYMBOLS, pitchOffset=100, pauses=True)
 
 	logBadSequenceTypes(speechSequence)
