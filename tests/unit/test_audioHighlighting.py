@@ -1,6 +1,6 @@
 """Unit test for audio highlighting in speech (e.g. pitch changes, etc). """
 
-from speech.audioHighlighting import splitOffSpecialCharacters, changePitchOnSpecialCharacters, changePitchOnSpecialCharactersOfString, SYMBOLS
+from speech.audioHighlighting import splitOffSpecialCharacters, changePitchOnSpecialCharacters, changePitchOnSpecialCharactersOfString, SYMBOLS, changePitchOnStringMatch
 from speech.commands import PitchCommand, EndUtteranceCommand
 
 def test_changePitchOnSpecialCharacters():
@@ -69,8 +69,37 @@ def test_splitOffSpecialCharacters():
     assert actualResult2["substrings"] == expectedSubstrings2
     assert actualResult2["specialsMask"] == expectedSpecialsMask2
 
+
+def test_changePitchOnStringMatch():
+    """Test changePitchOnStringMatch"""
+    speechSequence = ["This is a heading test.", EndUtteranceCommand(), "heading", "Introduction"]
+
+    # test with default kwargs
+    result = changePitchOnStringMatch(speechSequence, ["heading"])
+    r = iter(result)
+    assertPitchCommand(next(r), 0)
+    assert next(r) == "This is a heading test."
+    assertPitchCommand(next(r), 0)
+    assert isinstance(next(r), EndUtteranceCommand)
+    assertPitchCommand(next(r), 100)
+    assert next(r) == "heading"
+    assertPitchCommand(next(r), 0)
+    assert next(r) == "Introduction"
+
+    # test with modified kwargs
+    result = changePitchOnStringMatch(speechSequence, ["heading"], pitchOffset=40, changeNextItem=True)
+    r = iter(result)
+    assertPitchCommand(next(r), 0)
+    assert next(r) == "This is a heading test."
+    assertPitchCommand(next(r), 0)
+    assert isinstance(next(r), EndUtteranceCommand)
+    assertPitchCommand(next(r), 40)
+    assert next(r) == "heading"
+    assertPitchCommand(next(r), 40)
+    assert next(r) == "Introduction"
+
 def assertPitchCommand(obj, offset):
-        assert isinstance(obj, PitchCommand)
-        assert obj.offset == offset
+    assert isinstance(obj, PitchCommand)
+    assert obj.offset == offset
 
     

@@ -8,7 +8,7 @@
 """ 
 
 from characterProcessing import SymbolLevel
-from speech.audioHighlighting import changePitchOnSpecialCharacters, SYMBOLS
+from speech.audioHighlighting import changePitchOnSpecialCharacters, SYMBOLS, changePitchOnStringMatch
 import controlTypes
 import itertools
 import typing
@@ -887,24 +887,35 @@ def speak(  # noqa: C901
 	@param symbolLevel: The symbol verbosity level; C{None} (default) to use the user's configuration.
 	@param priority: The speech priority.
 	"""
+	print(f"@@@0 speechSequence: {speechSequence}")
 	# added audio highlighting
 	if symbolLevel is None:
 		symbolLevel = config.conf["speech"]["symbolLevel"]
 	noPitchCommand = not any(isinstance(x, PitchCommand) for x in speechSequence)
 
 	focus = api.getFocusObject()
-	usingVSCode = focus.appModule.appName == "code"
-	isEditable = focus.role == controlTypes.Role.EDITABLETEXT
-	isPythonFile = ".py" in focus.name
+	nav = api.getNavigatorObject()
 
 	if (
 		symbolLevel == SymbolLevel.ALL 
 		and noPitchCommand
-		and usingVSCode
-		and isEditable
-		and isPythonFile
+		and focus is not None
+		and focus.appModule.appName == "code"
+		and focus.role == controlTypes.Role.EDITABLETEXT
+		and ".py" in focus.name
 	):
-		speechSequence = changePitchOnSpecialCharacters(speechSequence, SYMBOLS, pitchOffset=100, pauses=True)
+		# speechSequence = changePitchOnSpecialCharacters(speechSequence, SYMBOLS, pitchOffset=100, pauses=False)
+		pass
+	# else:
+		# speechSequence = changePitchOnStringMatch(speechSequence, ["heading", "link"], pitchOffset=100, changeNextItem=True)
+	# elif nav.role == controlTypes.Role.HEADING:
+	# 	tones.beep(500, 50)
+	# 	print(f"@@@1 {speechSequence}")
+	# 	speechSequence = [PitchCommand(offset=100)] + speechSequence
+	# 	print(f"@@@2 {speechSequence}")
+	# elif nav.role == controlTypes.Role.LINK:
+	# 	tones.beep(200, 50)
+	# 	speechSequence = [PitchCommand(offset=-100)] + speechSequence
 
 	logBadSequenceTypes(speechSequence)
 	# in case priority was explicitly passed in as None, set to default.
@@ -967,7 +978,23 @@ def speak(  # noqa: C901
 			speechSequence[index]=processText(curLanguage,item,symbolLevel)
 			if not inCharacterMode:
 				speechSequence[index]+=CHUNK_SEPARATOR
+	speechSequence = changePitchOnStringMatch(
+		speechSequence, 
+		[
+			"heading  ", "level 1  ", "level 2  ", "level 3  ", "level 4  ", "level 5  ", "level 6  "
+		], 
+		pitchOffset=100, 
+		changeNextItem=True
+	)
+	speechSequence = changePitchOnStringMatch(
+		speechSequence, 
+		["link  ", "button  "], 
+		pitchOffset=-100, 
+		changeNextItem=True
+	)
+	
 	_manager.speak(speechSequence, priority)
+	print(f"@@@9 speechSequence: {speechSequence}")
 
 
 def speakPreselectedText(

@@ -1,6 +1,7 @@
 """Functions to add audio highlighting (e.g. pitch changes, etc) to speech sequences."""
 
 from speech.types import SpeechSequence
+from copy import deepcopy
 from speech.commands import PitchCommand, EndUtteranceCommand
 from typing import Dict, List, Any
 
@@ -71,3 +72,48 @@ def changePitchOnSpecialCharactersOfString(speechString: str, specials: List[str
             subsequence.append(EndUtteranceCommand())
         speechSequence.extend(subsequence)
     return speechSequence
+
+
+
+def changePitchOnStringMatch(speechSequence: SpeechSequence, pitchChangeStrings: Dict[int, List[str]], changeNextItem: bool = False) -> SpeechSequence:
+    """
+    Adds pitch change commands to all strings (in the given speech sequence) that match the given strings.
+    """
+    pitchChangeMask = [(isinstance(x, str) and x in strings) for x in speechSequence]
+    if changeNextItem:
+        pitchChangeMask = _expandHotItemsRightward(pitchChangeMask)
+
+    newSpeechSequence = []
+    for doPitchChange, x in zip(pitchChangeMask, speechSequence):
+        offset = pitchOffset if doPitchChange else 0
+        newSpeechSequence.extend([PitchCommand(offset=offset), x])
+    return newSpeechSequence
+
+
+def _changePitchOnStringMatch(speechSequence: SpeechSequence, strings: List[str], pitchOffset: int = 100, changeNextItem: bool = False) -> SpeechSequence:
+    """
+    Adds pitch change commands to all strings (in the given speech sequence) that match the given strings.
+    """
+    pitchChangeMask = [(isinstance(x, str) and x in strings) for x in speechSequence]
+    if changeNextItem:
+        pitchChangeMask = _expandHotItemsRightward(pitchChangeMask)
+
+    newSpeechSequence = []
+    for doPitchChange, x in zip(pitchChangeMask, speechSequence):
+        offset = pitchOffset if doPitchChange else 0
+        newSpeechSequence.extend([PitchCommand(offset=offset), x])
+    return newSpeechSequence
+def identifyPitchOffsets(speechSequence: speechSequence, pitchChangeStrings: Dict[int, List[str]]) -> List[int]:
+    """Generate the ordered list of pitch offsets (for each speech seuqnce item), given a dictionary that instructs which strings get which pitch offset. """
+    @@@
+
+
+def _expandHotItemsRightward(mask: List[bool]) -> List[bool]:
+    """
+    Generate a new mask, where every hot item (True) changes the item immediately to the right into a hot item too.
+    """
+    newMask = deepcopy(mask)
+    for i, x in enumerate(mask):
+        if x and i < len(mask) - 1:
+            newMask[i + 1] = True
+    return newMask
