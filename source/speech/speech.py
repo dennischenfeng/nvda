@@ -887,7 +887,7 @@ def speak(  # noqa: C901
 	@param symbolLevel: The symbol verbosity level; C{None} (default) to use the user's configuration.
 	@param priority: The speech priority.
 	"""
-	print(f"@@@0 speechSequence: {speechSequence}")
+	print(f"@@@0 speechSequence: {speechSequence}")  # TODO: testing
 	# added audio highlighting
 	if symbolLevel is None:
 		symbolLevel = config.conf["speech"]["symbolLevel"]
@@ -904,19 +904,10 @@ def speak(  # noqa: C901
 		and focus.role == controlTypes.Role.EDITABLETEXT
 		and ".py" in focus.name
 	):
+		# TODO: modify this audio highlighting to be practically useful
 		# speechSequence = changePitchOnSpecialCharacters(speechSequence, SYMBOLS, pitchOffset=100, pauses=False)
 		pass
-	# else:
-		# speechSequence = changePitchOnStringMatch(speechSequence, ["heading", "link"], pitchOffset=100, changeNextItem=True)
-	# elif nav.role == controlTypes.Role.HEADING:
-	# 	tones.beep(500, 50)
-	# 	print(f"@@@1 {speechSequence}")
-	# 	speechSequence = [PitchCommand(offset=100)] + speechSequence
-	# 	print(f"@@@2 {speechSequence}")
-	# elif nav.role == controlTypes.Role.LINK:
-	# 	tones.beep(200, 50)
-	# 	speechSequence = [PitchCommand(offset=-100)] + speechSequence
-
+	
 	logBadSequenceTypes(speechSequence)
 	# in case priority was explicitly passed in as None, set to default.
 	priority: Spri = Spri.NORMAL if priority is None else priority
@@ -978,23 +969,18 @@ def speak(  # noqa: C901
 			speechSequence[index]=processText(curLanguage,item,symbolLevel)
 			if not inCharacterMode:
 				speechSequence[index]+=CHUNK_SEPARATOR
-	speechSequence = changePitchOnStringMatch(
-		speechSequence, 
-		[
-			"heading  ", "level 1  ", "level 2  ", "level 3  ", "level 4  ", "level 5  ", "level 6  "
-		], 
-		pitchOffset=100, 
-		changeNextItem=True
-	)
-	speechSequence = changePitchOnStringMatch(
-		speechSequence, 
-		["link  ", "button  "], 
-		pitchOffset=-100, 
-		changeNextItem=True
-	)
 	
+	if noPitchCommand:
+		speechSequence = changePitchOnStringMatch(
+			speechSequence, 
+			{
+				100: ["heading  ", "level 1  ", "level 2  ", "level 3  ", "level 4  ", "level 5  ", "level 6  "],
+				-100: ["link  ", "button  "],
+			},
+			changeNextItem=True,
+		)
 	_manager.speak(speechSequence, priority)
-	print(f"@@@9 speechSequence: {speechSequence}")
+	print(f"@@@9 speechSequence: {speechSequence}")  # TODO: testing
 
 
 def speakPreselectedText(

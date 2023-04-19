@@ -72,10 +72,10 @@ def test_splitOffSpecialCharacters():
 
 def test_changePitchOnStringMatch():
     """Test changePitchOnStringMatch"""
-    speechSequence = ["This is a heading test.", EndUtteranceCommand(), "heading", "Introduction"]
+    speechSequence = ["This is a heading test.", EndUtteranceCommand(), "heading", "Introduction", "link"]
 
     # test with default kwargs
-    result = changePitchOnStringMatch(speechSequence, ["heading"])
+    result = changePitchOnStringMatch(speechSequence, {100: ["heading"]})
     r = iter(result)
     assertPitchCommand(next(r), 0)
     assert next(r) == "This is a heading test."
@@ -85,9 +85,11 @@ def test_changePitchOnStringMatch():
     assert next(r) == "heading"
     assertPitchCommand(next(r), 0)
     assert next(r) == "Introduction"
+    assertPitchCommand(next(r), 0)
+    assert next(r) == "link"
 
     # test with modified kwargs
-    result = changePitchOnStringMatch(speechSequence, ["heading"], pitchOffset=40, changeNextItem=True)
+    result = changePitchOnStringMatch(speechSequence, {40: ["heading"], -90: ["link"]}, changeNextItem=True)
     r = iter(result)
     assertPitchCommand(next(r), 0)
     assert next(r) == "This is a heading test."
@@ -97,6 +99,9 @@ def test_changePitchOnStringMatch():
     assert next(r) == "heading"
     assertPitchCommand(next(r), 40)
     assert next(r) == "Introduction"
+    assertPitchCommand(next(r), -90)
+    assert next(r) == "link"
+
 
 def assertPitchCommand(obj, offset):
     assert isinstance(obj, PitchCommand)

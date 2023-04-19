@@ -79,41 +79,36 @@ def changePitchOnStringMatch(speechSequence: SpeechSequence, pitchChangeStrings:
     """
     Adds pitch change commands to all strings (in the given speech sequence) that match the given strings.
     """
-    pitchChangeMask = [(isinstance(x, str) and x in strings) for x in speechSequence]
+    pitchOffsets = identifyPitchOffsets(speechSequence, pitchChangeStrings)
     if changeNextItem:
-        pitchChangeMask = _expandHotItemsRightward(pitchChangeMask)
+        pitchOffsets = _expandPitchChangesRightward(pitchOffsets)
 
     newSpeechSequence = []
-    for doPitchChange, x in zip(pitchChangeMask, speechSequence):
-        offset = pitchOffset if doPitchChange else 0
+    for offset, x in zip(pitchOffsets, speechSequence):
         newSpeechSequence.extend([PitchCommand(offset=offset), x])
     return newSpeechSequence
 
 
-def _changePitchOnStringMatch(speechSequence: SpeechSequence, strings: List[str], pitchOffset: int = 100, changeNextItem: bool = False) -> SpeechSequence:
-    """
-    Adds pitch change commands to all strings (in the given speech sequence) that match the given strings.
-    """
-    pitchChangeMask = [(isinstance(x, str) and x in strings) for x in speechSequence]
-    if changeNextItem:
-        pitchChangeMask = _expandHotItemsRightward(pitchChangeMask)
-
-    newSpeechSequence = []
-    for doPitchChange, x in zip(pitchChangeMask, speechSequence):
-        offset = pitchOffset if doPitchChange else 0
-        newSpeechSequence.extend([PitchCommand(offset=offset), x])
-    return newSpeechSequence
-def identifyPitchOffsets(speechSequence: speechSequence, pitchChangeStrings: Dict[int, List[str]]) -> List[int]:
+def identifyPitchOffsets(speechSequence: SpeechSequence, pitchChangeStrings: Dict[int, List[str]]) -> List[int]:
     """Generate the ordered list of pitch offsets (for each speech seuqnce item), given a dictionary that instructs which strings get which pitch offset. """
-    @@@
+    pitchOffsets = []
+    possibleOffsets = pitchChangeStrings.keys()
+    for x in speechSequence:
+        offset = 0
+        for o in possibleOffsets:
+            if x in pitchChangeStrings[o]:
+                offset = o
+                break
+        pitchOffsets.append(offset)
+    return pitchOffsets
 
 
-def _expandHotItemsRightward(mask: List[bool]) -> List[bool]:
+def _expandPitchChangesRightward(pitchOffsets: List[int]) -> List[int]:
     """
-    Generate a new mask, where every hot item (True) changes the item immediately to the right into a hot item too.
+    Generate a new pitch offsets list , where every nonzero item changes the item immediately to the right into a nonzero item too (with same offset value).
     """
-    newMask = deepcopy(mask)
-    for i, x in enumerate(mask):
-        if x and i < len(mask) - 1:
-            newMask[i + 1] = True
-    return newMask
+    newPitchOffsets = deepcopy(pitchOffsets)
+    for i, x in enumerate(pitchOffsets):
+        if x != 0  and i < len(pitchOffsets) - 1:
+            newPitchOffsets[i + 1] = pitchOffsets[i]
+    return newPitchOffsets
