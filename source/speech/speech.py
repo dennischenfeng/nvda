@@ -970,7 +970,11 @@ def speak(  # noqa: C901
 			if not inCharacterMode:
 				speechSequence[index]+=CHUNK_SEPARATOR
 	
-	if noPitchCommand:
+	if (
+		noPitchCommand 
+		and focus is not None
+		and focus.appModule.appName == "firefox"
+	):
 		speechSequence = changePitchOnStringMatch(
 			speechSequence, 
 			{
